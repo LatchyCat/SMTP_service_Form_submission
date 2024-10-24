@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
+    // Add this section to ensure public files are copied
+    copyPublicDir: true
   },
   server: {
     port: 3000,
