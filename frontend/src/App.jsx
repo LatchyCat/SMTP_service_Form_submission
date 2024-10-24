@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import TopNav from './components/navigation/TopNav';
 import HomeView from './views/HomeView';
 import ReviewView from './views/ReviewView';
@@ -17,6 +17,7 @@ function App() {
           <Route path="/quote" element={<QuoteView />} />
           <Route path="/login" element={<LoginView />} />
           <Route path="/register" element={<RegistrationView />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>
