@@ -1,8 +1,15 @@
 {
-  "name": "frontend",
+  "name": "drock-construction-llc",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "D Rock Construction LLC website - Professional construction services in Charleston, SC",
+  "author": "Lachlan (LatchyCat AKA 'Oriel G Silva Jr') orielsilvab@gmail.com",
   "type": "module",
+  "homepage": "https://drockconstructionllc.netlify.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LatchyCat/SMTP_service_Form_submission"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,6 +18,17 @@
     "backend": "cd ../backend && python run.py",
     "start": "concurrently \"npm run dev\" \"npm run backend\""
   },
+  "keywords": [
+    "construction",
+    "contractor",
+    "seattle",
+    "building",
+    "renovation",
+    "react",
+    "vite",
+    "tailwindcss"
+  ],
+  "license": "MIT",
   "dependencies": {
     "@headlessui/react": "^2.1.10",
     "axios": "^1.7.7",
