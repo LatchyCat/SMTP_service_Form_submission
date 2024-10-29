@@ -20,8 +20,11 @@ class Config:
     JWT_HEADER_NAME = "Authorization"
     JWT_HEADER_TYPE = "Bearer"
 
-    # CORS config
-    CORS_HEADERS = 'Content-Type'
+     # CORS config
+    CORS_HEADERS = ['Content-Type', 'Authorization', 'Accept']
+    CORS_ORIGINS = ["http://localhost:3000"]
+    CORS_SUPPORTS_CREDENTIALS = True
+    CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
 
     # Email config
     MAIL_SERVER = os.getenv('EMAIL_HOST', 'smtp.gmail.com')

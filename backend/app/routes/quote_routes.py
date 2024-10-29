@@ -6,7 +6,7 @@ from app.extensions import db
 
 quote_routes = Blueprint('quotes', __name__)
 
-@quote_routes.route('/api/quotes', methods=['POST'])  # Updated route path
+@quote_routes.route('', methods=['POST'])  # Just empty string since prefix handles full path
 @cross_origin()
 def create_quote():
     try:
@@ -65,7 +65,7 @@ def create_quote():
             'error': str(e)
         }), 500
 
-@quote_routes.route('/api/quotes', methods=['GET'])  # Updated route path
+@quote_routes.route('', methods=['GET'])  # Just empty string since prefix handles full path
 @cross_origin()
 def get_quotes():
     try:

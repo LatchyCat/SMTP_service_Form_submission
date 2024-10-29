@@ -1,105 +1,95 @@
-from flask import Blueprint, jsonify, request
-from flask_cors import cross_origin
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.review import Review
-from app.models.user import User  # Add this import
-from app.services.email_service import EmailService
-from app.extensions import db  # Use this import in route files
+from app.models.user import User
+from app.extensions import db
+import logging
 
 review_routes = Blueprint('reviews', __name__)
 
-@review_routes.route('/api/reviews', methods=['POST'])
-@cross_origin()
-@jwt_required()  # Requires authentication
+@review_routes.route('', methods=['GET'])
+def get_reviews():
+    reviews = Review.query.all()
+    return jsonify({
+        'success': True,
+        'data': [review.to_dict() for review in reviews]
+    })
+
+@review_routes.route('', methods=['POST', 'OPTIONS'])
+@jwt_required()
 def create_review():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+
     try:
-        current_user_id = get_jwt_identity()
+        # Debug logging
+        print("Headers received:", dict(request.headers))
         data = request.get_json()
+        print("Data received:", data)
+        current_user_id = get_jwt_identity()
+        print("Current user ID:", current_user_id)
+
+        # Validate data presence
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 422
 
         # Validate required fields
         required_fields = ['title', 'content', 'rating']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({
-                    'success': False,
-                    'error': f'Missing required field: {field}'
-                }), 400
-
-        # Validate rating range
-        if not 1 <= data['rating'] <= 5:
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
             return jsonify({
                 'success': False,
-                'error': 'Rating must be between 1 and 5'
-            }), 400
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }), 422
+
+        # Validate rating
+        rating = data.get('rating')
+        if not isinstance(rating, (int, float)) or not (1 <= float(rating) <= 5):
+            return jsonify({
+                'success': False,
+                'error': f'Invalid rating value: {rating}. Must be between 1 and 5'
+            }), 422
+
+        # Validate user existence
+        user = User.query.get(current_user_id)
+        if not user:
+            return jsonify({
+                'success': False,
+                'error': 'User not found'
+            }), 422
 
         # Create review
         review = Review(
             title=data['title'],
             content=data['content'],
-            rating=data['rating'],
+            rating=float(rating),
             user_id=current_user_id
         )
 
+        print("Creating review:", review)
         db.session.add(review)
         db.session.commit()
-
-        # Send email notification
-        user = User.query.get(current_user_id)
-        email_body = f"""
-        New Review Submission:
-        User: {user.username}
-        Title: {data['title']}
-        Rating: {data['rating']}
-        Review: {data['content']}
-        """
-        EmailService.send_email('New Review Submission', email_body)
+        print("Review created successfully")
 
         return jsonify({
             'success': True,
-            'message': 'Review submitted successfully',
-            'data': {
-                'id': review.id,
-                'title': review.title,
-                'content': review.content,
-                'rating': review.rating,
-                'created_at': review.created_at.isoformat(),
-                'author': user.username
-            }
+            'message': 'Review created successfully',
+            'data': review.to_dict()
         }), 201
 
     except Exception as e:
+        print(f"Error in create_review: {str(e)}")
         db.session.rollback()
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
 
-@review_routes.route('/api/reviews', methods=['GET'])
-@cross_origin()
-def get_reviews():
-    try:
-        reviews = Review.query.order_by(Review.created_at.desc()).all()
 
-        return jsonify({
-            'success': True,
-            'message': 'Reviews retrieved successfully',
-            'data': [{
-                'id': review.id,
-                'title': review.title,
-                'content': review.content,
-                'rating': review.rating,
-                'created_at': review.created_at.isoformat(),
-                'author': review.author.username if review.author else 'Anonymous'
-            } for review in reviews]
-        }), 200
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@review_routes.route('/api/reviews/<int:review_id>', methods=['PUT'])
-@cross_origin()
+@review_routes.route('/<int:review_id>', methods=['PUT'])  # Fixed route path
 @jwt_required()
 def update_review(review_id):
     try:
@@ -151,8 +141,7 @@ def update_review(review_id):
             'error': str(e)
         }), 500
 
-@review_routes.route('/api/reviews/<int:review_id>', methods=['DELETE'])
-@cross_origin()
+@review_routes.route('/<int:review_id>', methods=['DELETE'])  # Fixed route path
 @jwt_required()
 def delete_review(review_id):
     try:

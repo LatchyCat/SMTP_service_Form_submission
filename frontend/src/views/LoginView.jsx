@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import api from '../services/api';
+
 
 const LoginView = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const initialValues = {
     email: '',
@@ -15,42 +20,66 @@ const LoginView = () => {
   const validationSchema = Yup.object({
     email: Yup.string()
       .email('Invalid email address')
-      .required('Required'),
+      .required('Email is required'),
     password: Yup.string()
-      .required('Required')
+      .required('Password is required')
   });
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', values);
+      const response = await api.post('/api/auth/login', {
+        email: values.email,
+        password: values.password
+      });
       localStorage.setItem('token', response.data.access_token);
-      navigate('/reviews');
+      setShowSuccessMessage(true);
+      // Add delay before redirect
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
     } catch (error) {
-      setFieldError('password', 'Invalid email or password');
+      if (error.response) {
+        setFieldError('password', error.response.data.error || 'Invalid email or password');
+      } else {
+        setFieldError('password', 'Network error occurred');
+      }
     }
     setSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen bg-brand-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Optional Logo */}
-        <div className="flex justify-center mb-6">
-          <div className="p-2 bg-brand-600 rounded-lg shadow-md">
-            <h1 className="text-white font-bold text-xl">D-Rock Construction</h1>
+        {/* Logo Section */}
+        <Link to="/" className="block mb-8">
+          <div className="flex justify-center">
+            <div className="bg-white p-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <img
+                src="/D_Rock_Logo.jpg"
+                alt="D-Rock Construction"
+                className="w-16 h-16 object-contain"
+              />
+            </div>
           </div>
-        </div>
+        </Link>
 
-        <h2 className="text-center text-3xl font-bold text-industrial-800 font-heading">
+        <h2 className="text-center text-3xl font-bold text-gray-900 tracking-tight">
           Welcome Back
         </h2>
-        <p className="mt-2 text-center text-sm text-construct-600">
+        <p className="mt-2 text-center text-sm text-gray-600">
           Sign in to leave reviews and share your experience
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-trim-200">
+        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100">
+
+        {showSuccessMessage && (
+          <div className="mb-6 p-4 bg-green-100 text-green-700 rounded-xl text-center">
+            Login successful! Redirecting to home page...
+          </div>
+        )}
+
           <Formik
             initialValues={initialValues}
             validationSchema={validationSchema}
@@ -59,36 +88,65 @@ const LoginView = () => {
             {({ isSubmitting }) => (
               <Form className="space-y-6">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-trim-800">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                     Email address
                   </label>
-                  <Field
-                    type="email"
-                    name="email"
-                    placeholder="your@email.com"
-                    className="mt-1 appearance-none block w-full px-3 py-2 border border-trim-300 rounded-md shadow-sm placeholder-construct-400 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
-                  />
-                  <ErrorMessage name="email" component="div" className="mt-1 text-accent-600 text-sm" />
+                  <div className="mt-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <Field
+                      type="email"
+                      name="email"
+                      placeholder="your@email.com"
+                      className="block w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                    />
+                    <ErrorMessage
+                      name="email"
+                      component="div"
+                      className="absolute -bottom-5 left-0 text-red-500 text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-trim-800">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                     Password
                   </label>
-                  <Field
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    className="mt-1 appearance-none block w-full px-3 py-2 border border-trim-300 rounded-md shadow-sm placeholder-construct-400 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm"
-                  />
-                  <ErrorMessage name="password" component="div" className="mt-1 text-accent-600 text-sm" />
+                  <div className="mt-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="••••••••"
+                      className="block w-full pl-10 pr-12 py-3 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 px-3 flex items-center"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      )}
+                    </button>
+                    <ErrorMessage
+                      name="password"
+                      component="div"
+                      className="absolute -bottom-5 left-0 text-red-500 text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-colors"
+                    className="w-full flex justify-center py-3 px-4 rounded-xl shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center">
@@ -104,22 +162,30 @@ const LoginView = () => {
                   </button>
                 </div>
 
-                <div className="text-center space-y-2">
-                  <p className="text-sm text-construct-600">
-                    Don't have an account?{' '}
+                <div className="space-y-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col space-y-3">
                     <Link
                       to="/register"
-                      className="font-medium text-industrial-600 hover:text-industrial-500 transition-colors"
+                      className="flex justify-center py-3 px-4 rounded-xl text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-200"
                     >
-                      Sign up
+                      Create an Account
                     </Link>
-                  </p>
-                  <Link
-                    to="/"
-                    className="block text-sm text-industrial-600 hover:text-industrial-500 transition-colors"
-                  >
-                    Return to Home
-                  </Link>
+                    <Link
+                      to="/"
+                      className="flex justify-center py-3 px-4 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                    >
+                      Return to Home
+                    </Link>
+                  </div>
                 </div>
               </Form>
             )}

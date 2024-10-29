@@ -4,6 +4,7 @@ from flask_jwt_extended import get_jwt_identity
 from app.models.user import User
 
 def admin_required():
+    """Decorator to check if the current user has admin privileges"""
     def wrapper(fn):
         @wraps(fn)
         def decorated_function(*args, **kwargs):
